@@ -80,8 +80,8 @@ spec:
         {{- end }}
         ports:
         - containerPort: 3000
-        {{- if eq .Values.storage.type "disk" }}
         volumeMounts:
+        {{- if eq .Values.storage.type "disk" }}
         - name: storage-volume
           mountPath: {{ .Values.storage.disk.storageRoot | quote }}
         {{- end }}
