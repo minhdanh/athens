@@ -8,7 +8,6 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
-  
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
@@ -16,10 +15,29 @@ spec:
         app: {{ template "fullname" . }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
         release: "{{ .Release.Name }}"
+      annotations:
+        checksum/secret: {{ include (print .Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
+      initContainers:
+        - name: copy-key-files
+          image: alpine:3.6
+          command:
+            - sh
+            - -c
+          args: ["cp /root/.ssh/id_rsa* /ssh-keys && chmod 400 /ssh-keys/*"]
+          volumeMounts:
+          - name: ssh-keys
+            mountPath: /ssh-keys
+          {{- range $server := .Values.sshGitServers }}
+          - name: {{ template "fullname" $ }}-secret
+            mountPath: /root/.ssh/id_rsa-{{ $server.host }}
+            subPath: id_rsa-{{ $server.host }}
+          {{- end }}
+      volumes:
       containers:
       - name: {{ template "fullname" . }}
-        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ tpl .Values.image.tag . }}"
         imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
         livenessProbe:
           httpGet:
@@ -32,12 +50,23 @@ spec:
         env:
         - name: ATHENS_STORAGE_TYPE
           value: {{ .Values.storage.type | quote }}
-        {{- if eq .Values.storage.type "disk"}}
+        {{- if eq .Values.storage.type "disk" }}
         - name: ATHENS_DISK_STORAGE_ROOT
           value: {{ .Values.storage.disk.storageRoot | quote }}
-        {{- else if eq .Values.storage.type "mongo"}}
+        {{- else if eq .Values.storage.type "mongo" }}
         - name: ATHENS_MONGO_STORAGE_URL
           value: {{ .Values.storage.mongo.url | quote }}
+        {{- else if eq .Values.storage.type "minio" }}
+        - name: ATHENS_MINIO_ENDPOINT
+          value: {{ .Values.storage.minio.endpoint | quote }}
+        - name: ATHENS_MINIO_ACCESS_KEY_ID
+          value: {{ .Values.storage.minio.key | quote }}
+        - name: ATHENS_MINIO_SECRET_ACCESS_KEY
+          value: {{ .Values.storage.minio.secret | quote }}
+        - name: ATHENS_MINIO_USE_SSL
+          value: {{ .Values.storage.minio.enableSsl | quote }}
+        - name: ATHENS_MINIO_BUCKET_NAME
+          value: {{ .Values.storage.minio.bucket | quote }}
         {{- end }}
         {{- if .Values.netrc.enabled }}
         - name: ATHENS_NETRC_PATH
@@ -51,8 +80,8 @@ spec:
         {{- end }}
         ports:
         - containerPort: 3000
-        {{- if eq .Values.storage.type "disk" }}
         volumeMounts:
+        {{- if eq .Values.storage.type "disk" }}
         - name: storage-volume
           mountPath: {{ .Values.storage.disk.storageRoot | quote }}
         {{- end }}
@@ -61,10 +90,20 @@ spec:
           mountPath: "/etc/netrc"
           readOnly: true
         {{- end }}
+        - name: {{ template "fullname" . }}-configmap
+          mountPath: /root/.ssh/config
+          subPath: ssh_config
+        - name: {{ template "fullname" . }}-configmap
+          mountPath: /root/.gitconfig
+          subPath: git_config
+        - name: ssh-keys
+          mountPath: /ssh-keys
       volumes:
+      - name: ssh-keys
+        emptyDir: {}
       - name: storage-volume
       {{- if .Values.storage.disk.persistence.enabled }}
-        persistentVolumeClaim: 
+        persistentVolumeClaim:
           claimName: {{ template "fullname" . }}-storage
       {{- else }}
         emptyDir: {}
@@ -74,3 +113,9 @@ spec:
         secret:
           secretName: netrcsecret
       {{- end }}
+      - name: {{ template "fullname" . }}-configmap
+        configMap:
+          name: {{ template "fullname" . }}-configmap
+      - name: {{ template "fullname" . }}-secret
+        secret:
+          secretName: {{ template "fullname" . }}-secret
