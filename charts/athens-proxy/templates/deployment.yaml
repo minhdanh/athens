@@ -53,9 +53,20 @@ spec:
         {{- if eq .Values.storage.type "disk" }}
         - name: ATHENS_DISK_STORAGE_ROOT
           value: {{ .Values.storage.disk.storageRoot | quote }}
-        {{- else if eq .Values.storage.type "mongo"}}
+        {{- else if eq .Values.storage.type "mongo" }}
         - name: ATHENS_MONGO_STORAGE_URL
           value: {{ .Values.storage.mongo.url | quote }}
+        {{- else if eq .Values.storage.type "minio" }}
+        - name: ATHENS_MINIO_ENDPOINT
+          value: {{ .Values.storage.minio.endpoint | quote }}
+        - name: ATHENS_MINIO_ACCESS_KEY_ID
+          value: {{ .Values.storage.minio.key | quote }}
+        - name: ATHENS_MINIO_SECRET_ACCESS_KEY
+          value: {{ .Values.storage.minio.secret | quote }}
+        - name: ATHENS_MINIO_USE_SSL
+          value: {{ .Values.storage.minio.enableSsl | quote }}
+        - name: ATHENS_MINIO_BUCKET_NAME
+          value: {{ .Values.storage.minio.bucket | quote }}
         {{- end }}
         {{- if .Values.netrc.enabled }}
         - name: ATHENS_NETRC_PATH

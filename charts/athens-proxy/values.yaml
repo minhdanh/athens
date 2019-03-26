@@ -31,6 +31,7 @@ ingress:
   tls:
 
 storage:
+  # currently supported types: `disk`, `mongo`, `minio`
   type: disk
   disk:
     storageRoot: "/var/lib/athens"
@@ -43,6 +44,14 @@ storage:
     # you must set this on the command line when you run 'helm install'
     # for example, you need to run 'helm install --set storage.mongo.url=myurl ...'
     url: "SET THIS ON THE COMMAND LINE"
+
+  # minio storage
+  minio:
+    endpoint:
+    key:
+    secret:
+    enableSsl: true
+    bucket: athens
 
 netrc:
   # if enabled, it expects to find the content of a valid .netrc file imported as a secret named netrcsecret
