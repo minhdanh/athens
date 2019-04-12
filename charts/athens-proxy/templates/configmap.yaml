@@ -21,6 +21,10 @@ data:
   git_config: |
     {{- range $server := .Values.sshGitServers }}
     [url "ssh://{{ $server.user }}@{{ $server.host }}:{{ $server.port}}"]
+      {{- if $server.httpHostname }}
+      insteadOf = https://{{ $server.httpHostname }}
+      {{- else }}
       insteadOf = https://{{ $server.host }}
+      {{- end }}
     {{- end -}}
 {{- end -}}

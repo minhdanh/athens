@@ -72,6 +72,8 @@ jaeger:
 sshGitServers:
   ## hostname of the git server
   - host: git.example.com
+    ## optional http hostname, in case ssh and http hostnames are different
+    # httpHostname: hostname
     ## ssh username
     user: git
     ## ssh private key for the user
