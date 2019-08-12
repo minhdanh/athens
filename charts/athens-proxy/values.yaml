@@ -30,6 +30,13 @@ ingress:
   # Provide a base64 encoded cert for TLS use
   tls:
 
+resources:
+  requests:
+    cpu: 20mi
+    memory: 1500M
+  limits:
+    cpu: 50mi
+    memory: 2048M
 storage:
   # currently supported types: `disk`, `mongo`, `minio`
   type: disk

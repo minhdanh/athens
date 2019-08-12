@@ -98,6 +98,8 @@ spec:
           subPath: git_config
         - name: ssh-keys
           mountPath: /ssh-keys
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
       volumes:
       - name: ssh-keys
         emptyDir: {}
