@@ -32,10 +32,10 @@ ingress:
 
 resources:
   requests:
-    cpu: 20mi
+    cpu: 20m
     memory: 1500M
   limits:
-    cpu: 50mi
+    cpu: 50m
     memory: 2048M
 storage:
   # currently supported types: `disk`, `mongo`, `minio`
