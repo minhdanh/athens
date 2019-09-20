@@ -35,7 +35,7 @@ resources:
     cpu: 20m
     memory: 1500M
   limits:
-    cpu: 50m
+    # cpu: 50m
     memory: 2048M
 storage:
   # currently supported types: `disk`, `mongo`, `minio`
